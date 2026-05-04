@@ -1,0 +1,27 @@
+{% load i18n %}
+<div class="oh-modal__dialog-header pb-0">
+  <span class="oh-modal__dialog-title" id="createModalLabel">
+    {% if form.instance.id %}
+      {% trans "Update Salary Disbursement Schedule" %}
+    {% else %}
+      {% trans "Create Salary Disbursement Schedule" %}
+    {% endif %}
+  </span>
+  <button class="oh-modal__close" aria-label="Close">
+    <ion-icon name="close-outline"></ion-icon>
+  </button>
+</div>
+<div class="oh-modal__dialog-body" >
+    <form
+        {% if form.instance.id  %}
+            hx-post="{% url 'update-salary-disbursement' form.instance.id %}"
+        {% else %}
+            hx-post="{% url 'create-salary-disbursement' %}"
+        {% endif %}
+        method="post"
+        hx-target="#objectCreateModalTarget"
+    >
+    {% csrf_token %} {{form.non_field_errors}}
+    {{form.as_p}}
+    </form>
+</div>

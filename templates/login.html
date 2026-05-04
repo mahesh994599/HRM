@@ -1,0 +1,611 @@
+{% load static %} {% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign In — {% if white_label_company_name %}{{ white_label_company_name }}{% else %}Synergific{% endif %}</title>
+    <link rel="apple-touch-icon" sizes="180x180"
+        href="{% if white_label_company.icon %}{{white_label_company.icon.url}}{% else %}{% static 'favicons/apple-touch-icon.png' %}{% endif %}">
+    <link rel="icon" type="image/png" sizes="32x32"
+        href="{% if white_label_company.icon %}{{white_label_company.icon.url}}{% else %}{% static 'favicons/favicon-32x32.png' %}{% endif %}">
+    <link rel="stylesheet" href="{% static '/build/css/style.min.css' %}" />
+    <link rel="manifest" href="{% static 'build/manifest.json' %}" />
+    <style>
+        /* ── Login Page Reset ─────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            min-height: 100vh;
+            height: 100%;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+            background: #0F172A !important;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+        /* Override any global styles from style.min.css that break the login layout */
+        body.login-page, body.login-page #main { all: unset; display: block; }
+        .synergific-wordmark {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 0;
+        }
+        .synergific-wordmark span {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #0F172A;
+            letter-spacing: -0.04em;
+        }
+
+        /* ── Alert Container ──────────────────────────────────────── */
+        .login-alerts {
+            position: fixed;
+            top: 1.25rem;
+            right: 1.25rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 300px;
+        }
+        .login-alert-item {
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            animation: slideInAlert 0.3s ease;
+        }
+        .login-alert-item.error,
+        .login-alert-item.warning { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+        .login-alert-item.success { background: #ECFDF5; color: #059669; border: 1px solid #A7F3D0; }
+        @keyframes slideInAlert { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* ── Wrapper ──────────────────────────────────────────────── */
+        .login-wrap {
+            display: flex !important;
+            min-height: 100vh !important;
+            width: 100% !important;
+            position: fixed !important;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 9998 !important;
+        }
+
+        /* ================================================================
+           LEFT PANEL — Branding
+           ================================================================ */
+        .login-panel {
+            flex: 0 0 42%;
+            background: linear-gradient(145deg, #0F0E2B 0%, #1E1B4B 35%, #312E81 70%, #4338CA 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem 3.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Decorative blobs */
+        .login-panel__blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            pointer-events: none;
+        }
+        .login-panel__blob--1 {
+            width: 380px; height: 380px;
+            background: rgba(99,102,241,0.2);
+            top: -120px; right: -100px;
+        }
+        .login-panel__blob--2 {
+            width: 280px; height: 280px;
+            background: rgba(6,182,212,0.12);
+            bottom: -80px; left: -60px;
+        }
+        .login-panel__blob--3 {
+            width: 200px; height: 200px;
+            background: rgba(139,92,246,0.15);
+            top: 50%; left: 50%;
+            transform: translate(-50%,-50%);
+        }
+
+        .login-panel__inner {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 360px;
+        }
+
+        /* Brand row */
+        .login-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 3.5rem;
+        }
+        .login-brand__icon {
+            width: 46px; height: 46px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.18);
+            display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+        .login-brand__icon ion-icon { font-size: 1.4rem; color: #A5B4FC; }
+        .login-brand__name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            letter-spacing: -0.02em;
+        }
+        .login-brand__sub {
+            font-size: 0.72rem;
+            color: #818CF8;
+            margin-top: 1px;
+        }
+
+        /* Headline */
+        .login-panel__headline {
+            font-size: 2.1rem;
+            font-weight: 800;
+            color: #FFFFFF;
+            line-height: 1.18;
+            letter-spacing: -0.035em;
+            margin-bottom: 1rem;
+        }
+        .login-panel__headline span { color: #818CF8; }
+
+        .login-panel__desc {
+            font-size: 0.9rem;
+            color: #C7D2FE;
+            line-height: 1.65;
+            margin-bottom: 2.75rem;
+        }
+
+        /* Feature list */
+        .login-features { display: flex; flex-direction: column; gap: 13px; }
+        .login-feature {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+        }
+        .login-feature__icon {
+            width: 38px; height: 38px;
+            border-radius: 11px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .login-feature__icon ion-icon { font-size: 1rem; color: #A5B4FC; }
+        .login-feature__text {
+            font-size: 0.87rem;
+            color: #C7D2FE;
+            font-weight: 500;
+        }
+
+        /* Bottom badge */
+        .login-panel__footer {
+            margin-top: 3rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .login-panel__footer-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #4ADE80;
+            box-shadow: 0 0 0 3px rgba(74,222,128,0.2);
+            animation: pulse 2s ease infinite;
+        }
+        @keyframes pulse { 0%,100%{ box-shadow: 0 0 0 3px rgba(74,222,128,0.2); } 50%{ box-shadow: 0 0 0 6px rgba(74,222,128,0.1); } }
+        .login-panel__footer-text { font-size: 0.78rem; color: #64748B; }
+
+        /* ================================================================
+           RIGHT PANEL — Form
+           ================================================================ */
+        .login-form-panel {
+            flex: 1;
+            background: #F8FAFC;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem 2rem;
+        }
+
+        .login-form-wrap {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        /* Form header */
+        .login-form-header {
+            text-align: center;
+            margin-bottom: 2.25rem;
+        }
+        .login-form-logo {
+            display: inline-block;
+            margin-bottom: 1.5rem;
+        }
+        .login-form-logo img {
+            height: 50px;
+            object-fit: contain;
+        }
+        .login-form-title {
+            font-size: 1.65rem;
+            font-weight: 800;
+            color: #0F172A;
+            letter-spacing: -0.03em;
+            margin-bottom: 6px;
+        }
+        .login-form-sub {
+            font-size: 0.875rem;
+            color: #64748B;
+        }
+
+        /* Card */
+        .login-card {
+            background: #FFFFFF;
+            border-radius: 20px;
+            padding: 2.25rem 2.25rem 2rem;
+            box-shadow: 0 4px 24px rgba(15,23,42,0.08), 0 1px 3px rgba(15,23,42,0.05);
+            border: 1px solid #E2E8F0;
+        }
+
+        /* Input groups */
+        .lf-group { margin-bottom: 1.15rem; }
+        .lf-label {
+            display: block;
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+        }
+        .lf-input-wrap { position: relative; }
+        .lf-input {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            color: #1E293B;
+            background: #F8FAFC;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            outline: none;
+            appearance: none;
+        }
+        .lf-input:focus {
+            border-color: #4F46E5;
+            background: #FFFFFF;
+            box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+        }
+        .lf-input::placeholder { color: #CBD5E1; }
+        .lf-input--pw { padding-right: 46px; }
+
+        /* Password toggle */
+        .lf-pw-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #94A3B8;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+        .lf-pw-toggle:hover { color: #4F46E5; }
+        .lf-pw-toggle ion-icon { font-size: 1.1rem; }
+
+        /* Sign in button */
+        .lf-btn {
+            width: 100%;
+            padding: 13px;
+            background: #4F46E5;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 11px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 1.5rem;
+            letter-spacing: 0.02em;
+            box-shadow: 0 4px 14px rgba(79,70,229,0.35);
+            font-family: inherit;
+        }
+        .lf-btn:hover {
+            background: #3730A3;
+            box-shadow: 0 6px 22px rgba(79,70,229,0.45);
+            transform: translateY(-1px);
+        }
+        .lf-btn:active { transform: translateY(0); }
+        .lf-btn ion-icon { font-size: 1rem; }
+
+        /* Forgot password */
+        .lf-forgot {
+            text-align: center;
+            margin-top: 1.15rem;
+        }
+        .lf-forgot a {
+            font-size: 0.85rem;
+            color: #4F46E5;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        .lf-forgot a:hover { color: #3730A3; text-decoration: underline; }
+
+        /* Demo buttons */
+        .lf-demo-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 1rem;
+        }
+        .lf-demo-btn {
+            flex: 1;
+            padding: 10px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-family: inherit;
+            text-decoration: none;
+        }
+        .lf-demo-btn--red  { background: rgba(239,68,68,0.08);   color: #DC2626; }
+        .lf-demo-btn--red:hover  { background: rgba(239,68,68,0.14);   color: #DC2626; }
+        .lf-demo-btn--green { background: rgba(16,185,129,0.08); color: #059669; }
+        .lf-demo-btn--green:hover { background: rgba(16,185,129,0.14); color: #059669; }
+
+        /* Footer */
+        .login-page-footer {
+            text-align: center;
+            margin-top: 1.75rem;
+            font-size: 0.77rem;
+            color: #94A3B8;
+        }
+
+        /* ── Responsive ───────────────────────────────────────────── */
+        @media (max-width: 700px) {
+            .login-panel { display: none !important; }
+            .login-form-panel {
+                background: linear-gradient(145deg, #0F0E2B 0%, #1E1B4B 40%, #4338CA 100%) !important;
+            }
+            .login-card { background: rgba(255,255,255,0.97) !important; }
+        }
+        @media (max-width: 480px) {
+            .login-form-panel { padding: 1.5rem 1rem; }
+            .login-card { padding: 1.75rem 1.5rem; border-radius: 16px; }
+            .login-form-title { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+
+<body class="login-page">
+    <!-- Alerts -->
+    <div class="login-alerts">
+        {% for message in messages %}
+        <div class="login-alert-item {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+
+    <div class="login-wrap">
+
+        <!-- ═══ LEFT PANEL ═══════════════════════════════════════════ -->
+        <div class="login-panel">
+            <div class="login-panel__blob login-panel__blob--1"></div>
+            <div class="login-panel__blob login-panel__blob--2"></div>
+            <div class="login-panel__blob login-panel__blob--3"></div>
+
+            <div class="login-panel__inner">
+                <!-- Brand -->
+                <div class="login-brand">
+                    <div class="login-brand__icon">
+                        <ion-icon name="people-outline"></ion-icon>
+                    </div>
+                    <div>
+                        <div class="login-brand__name">
+                            {% if white_label_company_name %}{{ white_label_company_name }}{% else %}Synergific{% endif %}
+                        </div>
+                        <div class="login-brand__sub">Human Resource Platform</div>
+                    </div>
+                </div>
+
+                <!-- Headline -->
+                <h1 class="login-panel__headline">
+                    Manage your<br>workforce <span>smarter.</span>
+                </h1>
+                <p class="login-panel__desc">
+                    A complete HR platform to streamline employee management,
+                    payroll, attendance, and performance — all in one place.
+                </p>
+
+                <!-- Features -->
+                <div class="login-features">
+                    <div class="login-feature">
+                        <div class="login-feature__icon">
+                            <ion-icon name="people-circle-outline"></ion-icon>
+                        </div>
+                        <span class="login-feature__text">Employee Lifecycle Management</span>
+                    </div>
+                    <div class="login-feature">
+                        <div class="login-feature__icon">
+                            <ion-icon name="card-outline"></ion-icon>
+                        </div>
+                        <span class="login-feature__text">Automated Payroll Processing</span>
+                    </div>
+                    <div class="login-feature">
+                        <div class="login-feature__icon">
+                            <ion-icon name="time-outline"></ion-icon>
+                        </div>
+                        <span class="login-feature__text">Attendance &amp; Leave Tracking</span>
+                    </div>
+                    <div class="login-feature">
+                        <div class="login-feature__icon">
+                            <ion-icon name="stats-chart-outline"></ion-icon>
+                        </div>
+                        <span class="login-feature__text">Performance Analytics &amp; Reviews</span>
+                    </div>
+                </div>
+
+                <!-- Footer badge -->
+                <div class="login-panel__footer">
+                    <div class="login-panel__footer-dot"></div>
+                    <span class="login-panel__footer-text">Trusted by growing organisations worldwide</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ RIGHT PANEL ══════════════════════════════════════════ -->
+        <div class="login-form-panel">
+            <div class="login-form-wrap">
+
+                <!-- Header -->
+                <div class="login-form-header">
+                    <div class="login-form-logo">
+                        {% if white_label_company.icon %}
+                        <img src="{{ white_label_company.icon.url }}" alt="{{ white_label_company_name }}" style="height:50px;object-fit:contain;" />
+                        {% else %}
+                        <img src="{% static 'images/branding/logo.png' %}" alt="{% if white_label_company_name %}{{ white_label_company_name }}{% else %}Synergific{% endif %}" style="height:50px;object-fit:contain;" />
+                        {% endif %}
+                    </div>
+                    <h2 class="login-form-title">Welcome back</h2>
+                    <p class="login-form-sub">Sign in to access your HR dashboard</p>
+                </div>
+
+                <!-- Card -->
+                <div class="login-card">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="lf-group">
+                            <label class="lf-label" for="username">{% trans "Username" %}</label>
+                            <input
+                                type="text"
+                                id="username"
+                                name="username"
+                                class="lf-input"
+                                placeholder="e.g. admin@company.com"
+                                autocomplete="username"
+                                required
+                            />
+                        </div>
+
+                        <div class="lf-group">
+                            <label class="lf-label" for="password">{% trans "Password" %}</label>
+                            <div class="lf-input-wrap">
+                                <input
+                                    type="password"
+                                    id="password"
+                                    name="password"
+                                    class="lf-input lf-input--pw"
+                                    placeholder="Enter your password"
+                                    autocomplete="current-password"
+                                    required
+                                />
+                                <button type="button" class="lf-pw-toggle" id="togglePwd" title="Toggle password">
+                                    <ion-icon id="eyeIcon" name="eye-outline"></ion-icon>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="lf-btn">
+                            <ion-icon name="lock-closed-outline"></ion-icon>
+                            {% trans "Secure Sign In" %}
+                        </button>
+                    </form>
+
+                    {% if not initialize_database %}
+                    <div class="lf-forgot">
+                        <a href="{% url 'forgot-password' %}">{% trans "Forgot your password?" %}</a>
+                    </div>
+                    {% endif %}
+
+                    {% if initialize_database %}
+                    <div class="lf-demo-row">
+                        <a href="{% url 'initialize-database' %}" class="lf-demo-btn lf-demo-btn--red">
+                            <ion-icon name="server-outline"></ion-icon>
+                            {% trans "Init Database" %}
+                        </a>
+                        <a href="#" onclick="$('#dataLoadAuthentication').toggleClass('oh-modal--show');" class="lf-demo-btn lf-demo-btn--green">
+                            <ion-icon name="cloud-download-outline"></ion-icon>
+                            {% trans "Load Demo Data" %}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="login-page-footer">
+                    &copy; {% now "Y" %} {% if white_label_company_name %}{{ white_label_company_name }}{% else %}Synergific{% endif %}.
+                    All rights reserved.
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Demo data modal -->
+    {% if initialize_database %}
+    <div class="oh-modal" id="dataLoadAuthentication" role="dialog" aria-hidden="true" style="backdrop-filter: blur(8px);">
+        <div class="oh-modal__dialog">
+            {% include "demo_database/auth_load_data.html" %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Scripts -->
+    <script src="{% static '/build/js/web.frontend.min.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script type="module" src="{% static 'images/ionicons/ui_icons/ionicons/ionicons.esm.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+    <script>
+        // Password visibility toggle
+        document.getElementById('togglePwd').addEventListener('click', function () {
+            var pwd  = document.getElementById('password');
+            var icon = document.getElementById('eyeIcon');
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                icon.setAttribute('name', 'eye-off-outline');
+            } else {
+                pwd.type = 'password';
+                icon.setAttribute('name', 'eye-outline');
+            }
+        });
+
+        // Blocked credentials alert
+        $(document).ready(function () {
+            if ($('.oh-alert--warning').length > 0) {
+                Swal.fire({
+                    title: 'Access Denied!',
+                    text: 'Your login credentials are blocked. Please contact HR administrators for assistance.',
+                    icon: 'warning',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#4F46E5',
+                    borderRadius: '16px',
+                });
+            }
+        });
+    </script>
+</body>
+</html>

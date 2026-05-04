@@ -1,0 +1,347 @@
+{% extends 'index.html' %} {% block content %}{% load i18n %} {% load static %}
+<div id="messages"></div>
+
+<section class="oh-wrapper oh-main__topbar">
+  <div class="oh-main__titlebar oh-main__titlebar--left">
+    <h1 class="oh-main__titlebar-title fw-bold">{% trans "Salary Disbursement" %}</h1>
+  </div>
+  <div class="oh-main__titlebar-button-container">
+    {% if perms.payroll.change_salarydisbursementschedule %}
+    <a href="{% url 'salary-disbursement-settings-view' %}" class="oh-btn oh-btn--light-bkg">
+      <ion-icon name="timer-outline" class="me-1"></ion-icon> {% trans "Auto Schedule" %}
+    </a>
+    {% endif %}
+    {% if confirmed_payslips %}
+    <a href="{% url 'generate-bank-file' %}" class="oh-btn oh-btn--light-bkg">
+      <ion-icon name="download-outline" class="me-1"></ion-icon> {% trans "Export Excel" %}
+    </a>
+    <form method="post" action="{% url 'disburse-salary-bulk' %}" id="bulkDisburseForm">
+      {% csrf_token %}
+      <input type="hidden" name="payslip_ids" id="selectedPayslipIds" value="">
+      <button type="button" class="oh-btn oh-btn--secondary oh-btn--shadow" onclick="disburseSelected()">
+        <ion-icon name="send-outline" class="me-1"></ion-icon>
+        {% trans "Transfer Selected" %}
+      </button>
+    </form>
+    {% endif %}
+  </div>
+</section>
+
+<section class="oh-wrapper">
+
+  <!-- ICICI Bank Config -->
+  <div class="oh-card mb-4">
+    <div class="oh-card__header d-flex justify-content-between align-items-center p-3">
+      <h5 class="mb-0">
+        <ion-icon name="business-outline"></ion-icon>
+        {% trans "ICICI Bank Configuration" %}
+      </h5>
+      {% if icici_config %}
+      <div>
+        {% if icici_config.is_sandbox %}
+          <span class="badge" style="background-color: #f0ad4e; color: white; font-size: 0.8rem; margin-right: 8px;">SANDBOX MODE</span>
+        {% else %}
+          <span class="badge" style="background-color: #5cb85c; color: white; font-size: 0.8rem; margin-right: 8px;">LIVE</span>
+        {% endif %}
+        <button class="oh-btn oh-btn--light-bkg oh-btn--sm"
+          data-toggle="oh-modal-toggle" data-target="#objectCreateModal"
+          hx-get="{% url 'update-icici-config' icici_config.id %}"
+          hx-target="#objectCreateModalTarget">
+          <ion-icon name="create-outline"></ion-icon> {% trans "Edit" %}
+        </button>
+      </div>
+      {% else %}
+      <button class="oh-btn oh-btn--secondary oh-btn--sm"
+        data-toggle="oh-modal-toggle" data-target="#objectCreateModal"
+        hx-get="{% url 'create-icici-config' %}"
+        hx-target="#objectCreateModalTarget">
+        <ion-icon name="add-outline" class="me-1"></ion-icon> {% trans "Setup ICICI Bank" %}
+      </button>
+      {% endif %}
+    </div>
+    {% if icici_config %}
+    <div class="p-3">
+      <div class="row">
+        <div class="col-md-3"><small class="text-muted">{% trans "Corporate ID" %}</small><br><strong>{{ icici_config.corp_id }}</strong></div>
+        <div class="col-md-3"><small class="text-muted">{% trans "Debit Account" %}</small><br><strong>{{ icici_config.debit_account_no }}</strong></div>
+        <div class="col-md-3"><small class="text-muted">{% trans "Transfer Mode" %}</small><br><strong>{{ icici_config.get_default_transfer_mode_display }}</strong></div>
+        <div class="col-md-3"><small class="text-muted">{% trans "Status" %}</small><br>
+          {% if icici_config.is_sandbox %}
+            <span style="color: #f0ad4e;">{% trans "Sandbox (Testing)" %}</span>
+          {% else %}
+            <span style="color: #5cb85c;">{% trans "Live" %}</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="p-4 text-center">
+      <p class="text-muted mb-0">{% trans "ICICI Bank not configured. Click 'Setup ICICI Bank' to enter your API credentials." %}</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Disbursement Source Account -->
+  <div class="oh-card mb-4">
+    <div class="oh-card__header d-flex justify-content-between align-items-center p-3">
+      <h5 class="mb-0">
+        <ion-icon name="wallet-outline"></ion-icon>
+        {% trans "Disbursement Source Account" %}
+      </h5>
+      <button class="oh-btn oh-btn--light-bkg oh-btn--sm"
+        data-toggle="oh-modal-toggle" data-target="#objectCreateModal"
+        hx-get="{% url 'create-disbursement-account' %}"
+        hx-target="#objectCreateModalTarget">
+        <ion-icon name="add-outline" class="me-1"></ion-icon> {% trans "Add" %}
+      </button>
+    </div>
+    {% if disbursement_accounts %}
+    <div class="p-3">
+      {% for acc in disbursement_accounts %}
+      <div class="row align-items-center mb-2">
+        <div class="col-md-2"><strong>{{ acc.bank_name }}</strong></div>
+        <div class="col-md-2">{{ acc.account_holder_name }}</div>
+        <div class="col-md-2">{{ acc.account_number }}</div>
+        <div class="col-md-2">{{ acc.branch|default:"—" }}</div>
+        <div class="col-md-2">{{ acc.ifsc_code|default:"—" }}</div>
+        <div class="col-md-2">
+          <a hx-get="{% url 'update-disbursement-account' acc.id %}" hx-target="#objectCreateModalTarget"
+            data-toggle="oh-modal-toggle" data-target="#objectCreateModal"
+            class="oh-btn oh-btn--light-bkg oh-btn--sm"><ion-icon name="create-outline"></ion-icon></a>
+          <a hx-get="{% url 'delete-disbursement-account' acc.id %}" hx-confirm="{% trans 'Delete this account?' %}"
+            class="oh-btn oh-btn--danger-outline oh-btn--light-bkg oh-btn--sm"><ion-icon name="trash-outline"></ion-icon></a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="p-3 text-center"><p class="text-muted mb-0">{% trans "No source account added." %}</p></div>
+    {% endif %}
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="oh-card oh-card--sm" style="border-left: 4px solid #f0ad4e;">
+        <div class="oh-card__content p-3">
+          <h6 class="text-muted mb-1">{% trans "Ready to Transfer" %}</h6>
+          <h3 class="fw-bold">{{ confirmed_count }}</h3>
+          <small class="text-muted">{{ confirmed_total|floatformat:2 }}</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="oh-card oh-card--sm" style="border-left: 4px solid #5cb85c;">
+        <div class="oh-card__content p-3">
+          <h6 class="text-muted mb-1">{% trans "Transferred" %}</h6>
+          <h3 class="fw-bold">{{ paid_count }}</h3>
+          <small class="text-muted">{{ paid_total|floatformat:2 }}</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="oh-card oh-card--sm" style="border-left: 4px solid #337ab7;">
+        <div class="oh-card__content p-3">
+          <h6 class="text-muted mb-1">{% trans "Draft" %}</h6>
+          <h3 class="fw-bold">{{ draft_count }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="oh-card oh-card--sm" style="border-left: 4px solid #d9534f;">
+        <div class="oh-card__content p-3">
+          <h6 class="text-muted mb-1">{% trans "No Bank Details" %}</h6>
+          <h3 class="fw-bold">{{ no_bank_count }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmed Payslips - Ready for Transfer -->
+  {% if confirmed_payslips %}
+  <div class="oh-card mb-4">
+    <div class="oh-card__header d-flex justify-content-between align-items-center p-3">
+      <h5 class="mb-0">
+        <ion-icon name="arrow-forward-circle-outline" style="color: #f0ad4e;"></ion-icon>
+        {% trans "Pending Transfer" %}
+      </h5>
+      <label><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"> {% trans "Select All" %}</label>
+    </div>
+    <div class="oh-sticky-table">
+      <div class="oh-sticky-table__table">
+        <div class="oh-sticky-table__thead">
+          <div class="oh-sticky-table__tr">
+            <div class="oh-sticky-table__th" style="width:40px;"></div>
+            <div class="oh-sticky-table__th">{% trans "Employee" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Period" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Net Pay" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Bank" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Account No." %}</div>
+            <div class="oh-sticky-table__th">{% trans "IFSC" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Action" %}</div>
+          </div>
+        </div>
+        <div class="oh-sticky-table__tbody">
+          {% for item in confirmed_payslips %}
+          <div class="oh-sticky-table__tr">
+            <div class="oh-sticky-table__td">
+              {% if item.has_bank %}<input type="checkbox" class="payslip-checkbox" value="{{ item.payslip.id }}">{% endif %}
+            </div>
+            <div class="oh-sticky-table__td">
+              <strong>{{ item.payslip.employee_id }}</strong>
+              {% if not item.has_bank %}
+                <span class="badge" style="background-color: #d9534f; color: white; font-size: 0.65rem;">{% trans "No Bank" %}</span>
+              {% endif %}
+            </div>
+            <div class="oh-sticky-table__td">{{ item.payslip.start_date|date:"d M" }} - {{ item.payslip.end_date|date:"d M Y" }}</div>
+            <div class="oh-sticky-table__td"><strong>{{ item.payslip.net_pay|floatformat:2 }}</strong></div>
+            <div class="oh-sticky-table__td">{{ item.bank.bank_name|default:"—" }}</div>
+            <div class="oh-sticky-table__td">{{ item.bank.account_number|default:"—" }}</div>
+            <div class="oh-sticky-table__td">{{ item.bank.any_other_code1|default:"—" }}</div>
+            <div class="oh-sticky-table__td">
+              {% if item.has_bank and icici_config %}
+              <form method="post" action="{% url 'disburse-salary' item.payslip.id %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="oh-btn oh-btn--secondary oh-btn--sm"
+                  onclick="return confirm('{% trans "Transfer" %} {{ item.payslip.net_pay }} {% trans "to" %} {{ item.payslip.employee_id }}?')">
+                  <ion-icon name="send-outline"></ion-icon> {% trans "Transfer" %}
+                </button>
+              </form>
+              {% elif not icici_config %}
+              <span class="text-muted" style="font-size:0.75rem;">{% trans "Setup ICICI first" %}</span>
+              {% else %}
+              <span class="text-muted" style="font-size:0.75rem;">{% trans "Add bank details" %}</span>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="oh-card mb-4 p-5 text-center">
+    <img style="display: block; width: 10%; margin: 20px auto; filter: opacity(0.5);" src="{% static 'images/ui/payment.png' %}" alt="" />
+    <h5 class="text-muted">{% trans "No confirmed payslips pending transfer." %}</h5>
+    <p class="text-muted">{% trans "Payslips must be in 'Confirmed' status to appear here." %}</p>
+  </div>
+  {% endif %}
+
+  <!-- Transaction History -->
+  {% if recent_transactions %}
+  <div class="oh-card mb-4">
+    <div class="oh-card__header p-3">
+      <h5 class="mb-0">
+        <ion-icon name="list-outline"></ion-icon>
+        {% trans "Transaction History" %}
+      </h5>
+    </div>
+    <div class="oh-sticky-table">
+      <div class="oh-sticky-table__table">
+        <div class="oh-sticky-table__thead">
+          <div class="oh-sticky-table__tr">
+            <div class="oh-sticky-table__th">{% trans "Date" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Employee" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Amount" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Mode" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Txn Ref" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Bank Ref" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Status" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Action" %}</div>
+          </div>
+        </div>
+        <div class="oh-sticky-table__tbody">
+          {% for txn in recent_transactions %}
+          <div class="oh-sticky-table__tr">
+            <div class="oh-sticky-table__td">{{ txn.initiated_at|date:"d M Y H:i" }}</div>
+            <div class="oh-sticky-table__td">{{ txn.beneficiary_name }}</div>
+            <div class="oh-sticky-table__td">{{ txn.amount|floatformat:2 }}</div>
+            <div class="oh-sticky-table__td">{{ txn.transfer_mode }}</div>
+            <div class="oh-sticky-table__td"><small>{{ txn.transaction_ref|default:"—" }}</small></div>
+            <div class="oh-sticky-table__td"><small>{{ txn.bank_ref|default:"—" }}</small></div>
+            <div class="oh-sticky-table__td">
+              {% if txn.status == "success" %}
+                <span class="badge" style="background-color: #5cb85c; color: white;">{% trans "Success" %}</span>
+              {% elif txn.status == "failed" %}
+                <span class="badge" style="background-color: #d9534f; color: white;">{% trans "Failed" %}</span>
+              {% elif txn.status == "processing" %}
+                <span class="badge" style="background-color: #f0ad4e; color: white;">{% trans "Processing" %}</span>
+              {% else %}
+                <span class="badge" style="background-color: #999; color: white;">{{ txn.get_status_display }}</span>
+              {% endif %}
+            </div>
+            <div class="oh-sticky-table__td">
+              {% if txn.status == "failed" %}
+              <form method="post" action="{% url 'retry-transaction' txn.id %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="oh-btn oh-btn--light-bkg oh-btn--sm"
+                  onclick="return confirm('{% trans "Retry this transfer?" %}')">
+                  <ion-icon name="refresh-outline"></ion-icon> {% trans "Retry" %}
+                </button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Recently Paid -->
+  {% if paid_payslips %}
+  <div class="oh-card">
+    <div class="oh-card__header p-3">
+      <h5 class="mb-0">
+        <ion-icon name="checkmark-done-circle-outline" style="color: #5cb85c;"></ion-icon>
+        {% trans "Recently Transferred" %}
+      </h5>
+    </div>
+    <div class="oh-sticky-table">
+      <div class="oh-sticky-table__table">
+        <div class="oh-sticky-table__thead">
+          <div class="oh-sticky-table__tr">
+            <div class="oh-sticky-table__th">{% trans "Employee" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Period" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Net Pay" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Bank" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Account" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Status" %}</div>
+          </div>
+        </div>
+        <div class="oh-sticky-table__tbody">
+          {% for item in paid_payslips %}
+          <div class="oh-sticky-table__tr">
+            <div class="oh-sticky-table__td">{{ item.payslip.employee_id }}</div>
+            <div class="oh-sticky-table__td">{{ item.payslip.start_date|date:"d M" }} - {{ item.payslip.end_date|date:"d M Y" }}</div>
+            <div class="oh-sticky-table__td">{{ item.payslip.net_pay|floatformat:2 }}</div>
+            <div class="oh-sticky-table__td">{{ item.bank.bank_name|default:"—" }}</div>
+            <div class="oh-sticky-table__td">{{ item.bank.account_number|default:"—" }}</div>
+            <div class="oh-sticky-table__td">
+              <span class="badge" style="background-color: #5cb85c; color: white;">{% trans "Paid" %}</span>
+              {% if item.txn %}<br><small class="text-muted">Ref: {{ item.txn.transaction_ref }}</small>{% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</section>
+
+<script>
+function toggleSelectAll(master) {
+  document.querySelectorAll('.payslip-checkbox').forEach(cb => cb.checked = master.checked);
+}
+function disburseSelected() {
+  const selected = [];
+  document.querySelectorAll('.payslip-checkbox:checked').forEach(cb => selected.push(cb.value));
+  if (selected.length === 0) { alert("Select at least one payslip."); return; }
+  if (!confirm("Transfer salary for " + selected.length + " employee(s) via ICICI Bank?")) return;
+  document.getElementById('selectedPayslipIds').value = selected.join(',');
+  document.getElementById('bulkDisburseForm').submit();
+}
+</script>
+{% endblock content %}

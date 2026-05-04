@@ -1,0 +1,16 @@
+{
+    "name": "Synergific",
+    "short_name": "Synergific",
+    "description": "Human Resource Management Platform",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#4F46E5",
+    "theme_color": "#4F46E5",
+    "icons": [
+      {
+        "src": "/static/favicons/apple-touch-icon.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      }
+    ]
+  }
