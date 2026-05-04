@@ -6,391 +6,397 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sign In — {% if white_label_company_name %}{{ white_label_company_name }}{% else %}Synergific{% endif %}</title>
-    <link rel="apple-touch-icon" sizes="180x180"
-        href="{% if white_label_company.icon %}{{white_label_company.icon.url}}{% else %}{% static 'favicons/apple-touch-icon.png' %}{% endif %}">
-    <link rel="icon" type="image/png" sizes="32x32"
-        href="{% if white_label_company.icon %}{{white_label_company.icon.url}}{% else %}{% static 'favicons/favicon-32x32.png' %}{% endif %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% if white_label_company.icon %}{{white_label_company.icon.url}}{% else %}{% static 'favicons/apple-touch-icon.png' %}{% endif %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% if white_label_company.icon %}{{white_label_company.icon.url}}{% else %}{% static 'favicons/favicon-32x32.png' %}{% endif %}">
     <link rel="stylesheet" href="{% static '/build/css/style.min.css' %}" />
     <link rel="manifest" href="{% static 'build/manifest.json' %}" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html, body {
-            min-height: 100vh; height: 100%;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-            overflow-x: hidden;
+            height: 100%; min-height: 100vh;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
         }
-        body.login-page, body.login-page #main { all: unset; display: block; }
+        body.login-page, body.login-page #main { all: unset; display: block; height: 100%; }
 
-        /* ── Alerts ──────────────────────────────────────────────── */
-        .login-alerts {
-            position: fixed; top: 1.25rem; right: 1.25rem; z-index: 9999;
-            display: flex; flex-direction: column; gap: 8px; width: 320px;
+        /* ── Toast alerts ────────────────────────────────────────── */
+        .s-alerts {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 9999; display: flex; flex-direction: column;
+            gap: 8px; width: 380px; max-width: 92vw;
         }
-        .login-alert-item {
-            padding: 12px 16px; border-radius: 12px;
-            font-size: 0.85rem; font-weight: 500;
-            animation: slideIn 0.3s ease;
+        .s-alert {
+            padding: 14px 20px; border-radius: 10px;
+            font-size: 0.85rem; font-weight: 500; text-align: center;
+            animation: toastIn 0.4s cubic-bezier(0.16,1,0.3,1);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
         }
-        .login-alert-item.error, .login-alert-item.warning {
-            background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA;
-        }
-        .login-alert-item.success {
-            background: #ECFDF5; color: #059669; border: 1px solid #A7F3D0;
-        }
-        @keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+        .s-alert.error, .s-alert.warning { background: #FFF; color: #B91C1C; border: 1px solid #FECACA; }
+        .s-alert.success { background: #FFF; color: #047857; border: 1px solid #A7F3D0; }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ── Layout ──────────────────────────────────────────────── */
-        .login-wrap {
+        /* ── Page layout ─────────────────────────────────────────── */
+        .s-page {
             display: flex !important;
             min-height: 100vh !important;
             width: 100% !important;
         }
 
-        /* ── Left Panel — Branding (dark) ────────────────────────── */
-        .login-left {
-            flex: 0 0 45%;
-            background: #0B1526;
-            background-image:
-                radial-gradient(ellipse 80% 50% at 20% 80%, rgba(59,130,246,0.08), transparent),
-                radial-gradient(ellipse 60% 40% at 80% 20%, rgba(124,58,237,0.06), transparent);
+        /* ═══════════════════════════════════════════════════════════
+           LEFT — Immersive brand panel
+           ═══════════════════════════════════════════════════════════ */
+        .s-brand {
+            flex: 0 0 52%; position: relative;
+            background: #0a0f1e;
             display: flex; flex-direction: column;
-            justify-content: space-between;
-            padding: 3rem 3.5rem;
-            position: relative;
+            justify-content: center; align-items: center;
+            padding: 4rem;
             overflow: hidden;
         }
-        /* Subtle grid */
-        .login-left::before {
-            content: '';
+
+        /* Mesh gradient background */
+        .s-brand__mesh {
             position: absolute; inset: 0;
-            background-image:
-                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-            background-size: 50px 50px;
-            pointer-events: none;
+            background:
+                radial-gradient(ellipse 50% 80% at 10% 90%, rgba(59,130,246,0.12) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 50% at 90% 10%, rgba(139,92,246,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse 40% 40% at 50% 50%, rgba(16,185,129,0.04) 0%, transparent 50%);
         }
 
-        .login-left__top, .login-left__mid, .login-left__bottom { position: relative; z-index: 1; }
+        /* Floating geometric shapes */
+        .s-shape {
+            position: absolute; border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.04);
+            animation: shapeFloat 25s ease-in-out infinite;
+        }
+        .s-shape--1 { width: 400px; height: 400px; top: -80px; right: -100px; animation-delay: 0s; }
+        .s-shape--2 { width: 250px; height: 250px; bottom: 10%; left: -50px; animation-delay: -8s; border-radius: 30%; }
+        .s-shape--3 { width: 180px; height: 180px; top: 35%; right: 15%; animation-delay: -16s; }
+        .s-shape--4 { width: 100px; height: 100px; bottom: 20%; right: 30%; animation-delay: -4s; border-radius: 20%; border-color: rgba(59,130,246,0.08); }
+        @keyframes shapeFloat {
+            0%, 100% { transform: translate(0,0) rotate(0deg); }
+            25% { transform: translate(15px,-20px) rotate(5deg); }
+            50% { transform: translate(-10px,15px) rotate(-3deg); }
+            75% { transform: translate(20px,10px) rotate(4deg); }
+        }
 
-        .login-left__top {
-            display: flex; align-items: center; gap: 10px;
+        /* Dot grid overlay */
+        .s-brand__dots {
+            position: absolute; inset: 0;
+            background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 24px 24px;
         }
-        .login-left__badge {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 6px 14px; border-radius: 20px;
-            background: rgba(59,130,246,0.1);
-            border: 1px solid rgba(59,130,246,0.15);
-            font-size: 0.72rem; font-weight: 600;
-            color: #60A5FA; text-transform: uppercase;
-            letter-spacing: 0.06em;
+
+        .s-brand__inner {
+            position: relative; z-index: 2;
+            max-width: 440px; width: 100%;
         }
-        .login-left__badge-dot {
+
+        /* Pill badge */
+        .s-pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 16px; border-radius: 100px;
+            background: rgba(59,130,246,0.08);
+            border: 1px solid rgba(59,130,246,0.12);
+            font-size: 0.7rem; font-weight: 600; color: #60A5FA;
+            text-transform: uppercase; letter-spacing: 0.1em;
+            margin-bottom: 2.5rem;
+            animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.1s both;
+        }
+        .s-pill__dot {
             width: 6px; height: 6px; border-radius: 50%;
             background: #3B82F6;
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
-            animation: pulse 2s ease infinite;
+            box-shadow: 0 0 8px rgba(59,130,246,0.4);
         }
-        @keyframes pulse { 0%,100%{ box-shadow: 0 0 0 3px rgba(59,130,246,0.2); } 50%{ box-shadow: 0 0 0 6px rgba(59,130,246,0.08); } }
 
-        .login-left__mid { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-        .login-left__headline {
-            font-size: 2.75rem; font-weight: 900; color: #FFFFFF;
-            line-height: 1.1; letter-spacing: -0.04em;
-            margin-bottom: 1.25rem;
+        /* Headline */
+        .s-headline {
+            font-size: 3.2rem; font-weight: 800; color: #fff;
+            line-height: 1.08; letter-spacing: -0.045em;
+            margin-bottom: 1.5rem;
+            animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.2s both;
         }
-        .login-left__headline em {
-            font-style: normal;
-            background: linear-gradient(135deg, #60A5FA, #A78BFA);
+        .s-headline em {
+            font-style: normal; position: relative;
+            background: linear-gradient(135deg, #60A5FA 0%, #A78BFA 50%, #34D399 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        .login-left__desc {
-            font-size: 1rem; color: #94A3B8; line-height: 1.75;
-            max-width: 400px;
+
+        .s-desc {
+            font-size: 1.05rem; color: rgba(255,255,255,0.45);
+            line-height: 1.75; font-weight: 400;
+            margin-bottom: 3rem;
+            animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.3s both;
         }
 
-        /* Feature pills */
-        .login-pills {
-            display: flex; flex-wrap: wrap; gap: 8px;
-            margin-top: 2.5rem;
+        /* Trust indicators */
+        .s-trust {
+            display: flex; gap: 32px;
+            animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.4s both;
         }
-        .login-pill {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 8px 16px; border-radius: 10px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.06);
-            font-size: 0.8rem; color: #CBD5E1; font-weight: 500;
+        .s-trust__item { text-align: left; }
+        .s-trust__val {
+            font-size: 1.8rem; font-weight: 800; color: #fff;
+            letter-spacing: -0.03em; line-height: 1;
         }
-        .login-pill ion-icon { font-size: 1rem; color: #60A5FA; }
+        .s-trust__val span {
+            background: linear-gradient(135deg, #60A5FA, #818CF8);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .s-trust__lbl {
+            font-size: 0.68rem; color: rgba(255,255,255,0.3);
+            text-transform: uppercase; letter-spacing: 0.08em;
+            margin-top: 4px; font-weight: 500;
+        }
 
-        .login-left__bottom {
-            font-size: 0.75rem; color: #334155;
+        /* Bottom modules strip */
+        .s-modules {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 20px 4rem;
+            display: flex; gap: 24px; flex-wrap: wrap;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            z-index: 2;
+            animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.5s both;
         }
+        .s-mod {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 0.72rem; color: rgba(255,255,255,0.25);
+            font-weight: 500;
+        }
+        .s-mod ion-icon { font-size: 0.85rem; color: rgba(255,255,255,0.15); }
 
-        /* ── Right Panel — Form (light) ──────────────────────────── */
-        .login-right {
-            flex: 1;
-            background: #FFFFFF;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            padding: 3rem 2.5rem;
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ═══════════════════════════════════════════════════════════
+           RIGHT — Form panel
+           ═══════════════════════════════════════════════════════════ */
+        .s-form-panel {
+            flex: 1; background: #FAFBFC;
+            display: flex; align-items: center; justify-content: center;
+            padding: 2rem;
             position: relative;
         }
-        /* Decorative corner shapes */
-        .login-right::before {
-            content: '';
-            position: absolute; top: -60px; right: -60px;
-            width: 200px; height: 200px;
-            background: radial-gradient(circle, rgba(59,130,246,0.05), transparent 70%);
-            border-radius: 50%;
-            pointer-events: none;
-        }
-        .login-right::after {
-            content: '';
-            position: absolute; bottom: -40px; left: -40px;
-            width: 150px; height: 150px;
-            background: radial-gradient(circle, rgba(124,58,237,0.04), transparent 70%);
-            border-radius: 50%;
-            pointer-events: none;
-        }
 
-        .login-form-container {
-            width: 100%; max-width: 400px;
-            position: relative; z-index: 1;
+        .s-form-wrap {
+            width: 100%; max-width: 380px;
+            animation: fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.15s both;
         }
 
         /* Logo */
-        .login-form-logo {
-            text-align: center; margin-bottom: 2.5rem;
-        }
-        .login-form-logo img {
-            height: 48px; object-fit: contain;
+        .s-logo { text-align: center; margin-bottom: 2.75rem; }
+        .s-logo img { height: 44px; object-fit: contain; }
+
+        /* Card */
+        .s-card {
+            background: #fff;
+            border: 1px solid rgba(0,0,0,0.06);
+            border-radius: 16px;
+            padding: 2rem 2rem 1.75rem;
+            box-shadow:
+                0 0 0 1px rgba(0,0,0,0.02),
+                0 2px 4px rgba(0,0,0,0.02),
+                0 12px 36px rgba(0,0,0,0.04);
         }
 
-        /* Form card */
-        .login-card {
-            background: #FFFFFF;
-            border: 1px solid #E5E7EB;
-            border-radius: 20px;
-            padding: 2.25rem;
-            box-shadow: 0 4px 32px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
+        /* Card header */
+        .s-card__hd { margin-bottom: 1.75rem; }
+        .s-card__hd h2 {
+            font-size: 1.35rem; font-weight: 700; color: #111;
+            letter-spacing: -0.02em; margin-bottom: 4px;
         }
+        .s-card__hd p { font-size: 0.85rem; color: #888; font-weight: 400; }
 
-        .login-card__head { text-align: center; margin-bottom: 2rem; }
-        .login-card__head h2 {
-            font-size: 1.5rem; font-weight: 800; color: #111827;
-            letter-spacing: -0.03em; margin-bottom: 4px;
+        /* Input group */
+        .s-field { margin-bottom: 1rem; }
+        .s-field__label {
+            display: block; font-size: 0.78rem; font-weight: 600;
+            color: #333; margin-bottom: 6px;
         }
-        .login-card__head p {
-            font-size: 0.875rem; color: #6B7280;
-        }
-
-        /* Input groups */
-        .lf-group { margin-bottom: 1.25rem; }
-        .lf-label {
-            display: block; font-size: 0.75rem; font-weight: 700;
-            color: #374151; margin-bottom: 6px;
-            text-transform: uppercase; letter-spacing: 0.06em;
-        }
-        .lf-input-wrap { position: relative; }
-        .lf-input-icon {
-            position: absolute; left: 14px; top: 50%;
-            transform: translateY(-50%);
-            color: #9CA3AF; font-size: 1.1rem;
-            display: flex; align-items: center;
-            pointer-events: none;
-            transition: color 0.2s;
-        }
-        .lf-input {
+        .s-field__wrap { position: relative; }
+        .s-field__input {
             width: 100%;
-            padding: 12px 14px 12px 44px;
-            border: 1.5px solid #E5E7EB;
-            border-radius: 12px;
-            font-size: 0.9rem; color: #111827;
-            background: #F9FAFB;
-            transition: all 0.2s ease;
+            padding: 11px 14px 11px 40px;
+            border: 1.5px solid #E0E0E0;
+            border-radius: 10px;
+            font-size: 0.88rem; color: #111;
+            background: #fff;
+            transition: all 0.15s ease;
             font-family: inherit; outline: none;
         }
-        .lf-input:focus {
-            border-color: #3B82F6;
-            background: #FFFFFF;
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        .s-field__input:hover { border-color: #C0C0C0; }
+        .s-field__input:focus {
+            border-color: #2563EB;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
         }
-        .lf-input:focus ~ .lf-input-icon { color: #3B82F6; }
-        .lf-input::placeholder { color: #9CA3AF; }
-        .lf-input--pw { padding-right: 48px; }
+        .s-field__input::placeholder { color: #B0B0B0; }
+        .s-field__input--pw { padding-right: 44px; }
 
-        .lf-pw-toggle {
-            position: absolute; right: 12px; top: 50%;
+        .s-field__icon {
+            position: absolute; left: 13px; top: 50%;
+            transform: translateY(-50%);
+            display: flex; align-items: center;
+            pointer-events: none;
+        }
+        .s-field__icon svg { width: 16px; height: 16px; stroke: #999; stroke-width: 1.8; fill: none; }
+        .s-field__input:focus ~ .s-field__icon svg { stroke: #2563EB; }
+
+        .s-field__toggle {
+            position: absolute; right: 10px; top: 50%;
             transform: translateY(-50%);
             background: none; border: none; cursor: pointer;
-            color: #9CA3AF; padding: 4px;
-            display: flex; align-items: center; justify-content: center;
-            transition: color 0.2s; line-height: 1;
+            padding: 4px; display: flex; align-items: center;
+            color: #B0B0B0; transition: color 0.15s;
         }
-        .lf-pw-toggle:hover { color: #3B82F6; }
-        .lf-pw-toggle ion-icon { font-size: 1.1rem; }
+        .s-field__toggle:hover { color: #2563EB; }
+        .s-field__toggle ion-icon { font-size: 1.05rem; }
 
         /* Forgot link */
-        .lf-row {
-            display: flex; justify-content: flex-end;
-            margin-bottom: 1.5rem;
+        .s-forgot {
+            text-align: right; margin-bottom: 1.25rem; margin-top: -0.25rem;
         }
-        .lf-forgot-link {
-            font-size: 0.82rem; color: #3B82F6;
-            text-decoration: none; font-weight: 600;
-            transition: color 0.2s;
+        .s-forgot a {
+            font-size: 0.8rem; color: #2563EB; text-decoration: none;
+            font-weight: 600; transition: color 0.15s;
         }
-        .lf-forgot-link:hover { color: #1D4ED8; text-decoration: underline; }
+        .s-forgot a:hover { color: #1D4ED8; }
 
-        /* Sign in button */
-        .lf-btn {
-            width: 100%; padding: 13px;
-            background: #0B1526;
-            color: #FFFFFF; border: none;
-            border-radius: 12px;
-            font-size: 0.92rem; font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
+        /* Submit */
+        .s-submit {
+            width: 100%; padding: 12px;
+            background: #111; color: #fff;
+            border: none; border-radius: 10px;
+            font-size: 0.88rem; font-weight: 600;
+            cursor: pointer; font-family: inherit;
+            transition: all 0.15s ease;
             display: flex; align-items: center;
             justify-content: center; gap: 8px;
-            letter-spacing: 0.01em;
-            font-family: inherit;
         }
-        .lf-btn:hover {
-            background: #1E293B;
-            box-shadow: 0 8px 24px rgba(11,21,38,0.2);
-            transform: translateY(-1px);
+        .s-submit:hover {
+            background: #222;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
         }
-        .lf-btn:active { transform: translateY(0); }
-        .lf-btn ion-icon { font-size: 1rem; }
+        .s-submit:active { transform: scale(0.99); }
+        .s-submit svg {
+            width: 16px; height: 16px; stroke: currentColor;
+            stroke-width: 2; fill: none;
+            transition: transform 0.2s;
+        }
+        .s-submit:hover svg { transform: translateX(2px); }
 
         /* Divider */
-        .lf-divider {
-            display: flex; align-items: center;
-            margin: 1.25rem 0; gap: 12px;
+        .s-divider {
+            display: flex; align-items: center; gap: 12px;
+            margin: 1.25rem 0;
         }
-        .lf-divider::before, .lf-divider::after {
-            content: ''; flex: 1; height: 1px;
-            background: #E5E7EB;
+        .s-divider::before, .s-divider::after {
+            content: ''; flex: 1; height: 1px; background: #ECECEC;
         }
-        .lf-divider span {
-            font-size: 0.75rem; color: #9CA3AF;
-            text-transform: uppercase; letter-spacing: 0.06em;
-        }
+        .s-divider span { font-size: 0.72rem; color: #999; font-weight: 500; }
 
         /* Demo buttons */
-        .lf-demo-row { display: flex; gap: 10px; }
-        .lf-demo-btn {
-            flex: 1; padding: 10px 8px;
-            border-radius: 10px;
-            font-size: 0.8rem; font-weight: 600;
-            cursor: pointer; border: none;
-            transition: all 0.2s;
+        .s-demo { display: flex; gap: 8px; }
+        .s-demo a {
+            flex: 1; padding: 9px; border-radius: 8px;
+            font-size: 0.78rem; font-weight: 600;
+            text-decoration: none; text-align: center;
             display: flex; align-items: center;
-            justify-content: center; gap: 6px;
-            font-family: inherit; text-decoration: none;
+            justify-content: center; gap: 5px;
+            transition: all 0.15s; border: 1px solid;
+            font-family: inherit;
         }
-        .lf-demo-btn--red {
-            background: #FEF2F2; color: #DC2626;
-            border: 1px solid #FECACA;
-        }
-        .lf-demo-btn--red:hover { background: #FEE2E2; }
-        .lf-demo-btn--green {
-            background: #ECFDF5; color: #059669;
-            border: 1px solid #A7F3D0;
-        }
-        .lf-demo-btn--green:hover { background: #D1FAE5; }
+        .s-demo a.--red { background: #FFF5F5; color: #DC2626; border-color: #FEE2E2; }
+        .s-demo a.--red:hover { background: #FEE2E2; }
+        .s-demo a.--grn { background: #F0FDF4; color: #16A34A; border-color: #DCFCE7; }
+        .s-demo a.--grn:hover { background: #DCFCE7; }
 
         /* Footer */
-        .login-footer {
-            text-align: center; margin-top: 2rem;
-            font-size: 0.75rem; color: #9CA3AF;
+        .s-footer {
+            text-align: center; margin-top: 1.75rem;
+            font-size: 0.72rem; color: #bbb; font-weight: 400;
         }
 
         /* ── Responsive ──────────────────────────────────────────── */
-        @media (max-width: 900px) {
-            .login-left { display: none !important; }
-            .login-right {
-                background: #F3F4F6 !important;
-                padding: 2rem 1.5rem;
-            }
+        @media (max-width: 960px) {
+            .s-brand { display: none !important; }
+            .s-form-panel { background: #fff; }
         }
         @media (max-width: 480px) {
-            .login-card { padding: 1.75rem 1.5rem; border-radius: 16px; }
-            .login-card__head h2 { font-size: 1.3rem; }
+            .s-form-panel { padding: 1.5rem; }
+            .s-card { padding: 1.5rem; border-radius: 14px; }
         }
     </style>
 </head>
 
 <body class="login-page">
-    <!-- Alerts -->
-    <div class="login-alerts">
+    <div class="s-alerts">
         {% for message in messages %}
-        <div class="login-alert-item {{ message.tags }}">{{ message }}</div>
+        <div class="s-alert {{ message.tags }}">{{ message }}</div>
         {% endfor %}
     </div>
 
-    <div class="login-wrap">
+    <div class="s-page">
 
-        <!-- ═══ LEFT PANEL — Dark branding ═══════════════════════════ -->
-        <div class="login-left">
-            <div class="login-left__top">
-                <div class="login-left__badge">
-                    <div class="login-left__badge-dot"></div>
-                    HR Platform
+        <!-- ═══ BRAND PANEL ═══════════════════════════════════════ -->
+        <div class="s-brand">
+            <div class="s-brand__mesh"></div>
+            <div class="s-brand__dots"></div>
+            <div class="s-shape s-shape--1"></div>
+            <div class="s-shape s-shape--2"></div>
+            <div class="s-shape s-shape--3"></div>
+            <div class="s-shape s-shape--4"></div>
+
+            <div class="s-brand__inner">
+                <div class="s-pill">
+                    <div class="s-pill__dot"></div>
+                    Human Resource Management
                 </div>
-            </div>
 
-            <div class="login-left__mid">
-                <h1 class="login-left__headline">
-                    Simplify your<br>HR with <em>one&nbsp;platform.</em>
+                <h1 class="s-headline">
+                    The smarter way<br>to manage <em>people.</em>
                 </h1>
-                <p class="login-left__desc">
-                    From recruitment to retirement — manage payroll, attendance, leave, performance and assets in a single unified workspace.
+
+                <p class="s-desc">
+                    Payroll, attendance, recruitment, performance, and leave management
+                    — unified in one elegant workspace built for modern teams.
                 </p>
 
-                <div class="login-pills">
-                    <div class="login-pill">
-                        <ion-icon name="people-outline"></ion-icon> Employees
+                <div class="s-trust">
+                    <div class="s-trust__item">
+                        <div class="s-trust__val"><span>12+</span></div>
+                        <div class="s-trust__lbl">Modules</div>
                     </div>
-                    <div class="login-pill">
-                        <ion-icon name="card-outline"></ion-icon> Payroll
+                    <div class="s-trust__item">
+                        <div class="s-trust__val"><span>100%</span></div>
+                        <div class="s-trust__lbl">Cloud Based</div>
                     </div>
-                    <div class="login-pill">
-                        <ion-icon name="time-outline"></ion-icon> Attendance
-                    </div>
-                    <div class="login-pill">
-                        <ion-icon name="calendar-outline"></ion-icon> Leave
-                    </div>
-                    <div class="login-pill">
-                        <ion-icon name="trending-up-outline"></ion-icon> Performance
-                    </div>
-                    <div class="login-pill">
-                        <ion-icon name="briefcase-outline"></ion-icon> Recruitment
-                    </div>
-                    <div class="login-pill">
-                        <ion-icon name="laptop-outline"></ion-icon> Assets
-                    </div>
-                    <div class="login-pill">
-                        <ion-icon name="cash-outline"></ion-icon> Disbursement
+                    <div class="s-trust__item">
+                        <div class="s-trust__val"><span>256‑bit</span></div>
+                        <div class="s-trust__lbl">Encrypted</div>
                     </div>
                 </div>
             </div>
 
-            <div class="login-left__bottom">
-                &copy; {% now "Y" %} {% if white_label_company_name %}{{ white_label_company_name }}{% else %}Synergific Software{% endif %}
+            <div class="s-modules">
+                <div class="s-mod"><ion-icon name="people-outline"></ion-icon> Employees</div>
+                <div class="s-mod"><ion-icon name="card-outline"></ion-icon> Payroll</div>
+                <div class="s-mod"><ion-icon name="time-outline"></ion-icon> Attendance</div>
+                <div class="s-mod"><ion-icon name="calendar-outline"></ion-icon> Leave</div>
+                <div class="s-mod"><ion-icon name="trending-up-outline"></ion-icon> Performance</div>
+                <div class="s-mod"><ion-icon name="briefcase-outline"></ion-icon> Recruitment</div>
+                <div class="s-mod"><ion-icon name="laptop-outline"></ion-icon> Assets</div>
             </div>
         </div>
 
-        <!-- ═══ RIGHT PANEL — Clean form ═════════════════════════════ -->
-        <div class="login-right">
-            <div class="login-form-container">
+        <!-- ═══ FORM PANEL ════════════════════════════════════════ -->
+        <div class="s-form-panel">
+            <div class="s-form-wrap">
 
-                <!-- Logo in original colors -->
-                <div class="login-form-logo">
+                <div class="s-logo">
                     {% if white_label_company.icon %}
                     <img src="{{ white_label_company.icon.url }}" alt="{{ white_label_company_name }}" />
                     {% else %}
@@ -398,110 +404,96 @@
                     {% endif %}
                 </div>
 
-                <!-- Form Card -->
-                <div class="login-card">
-                    <div class="login-card__head">
-                        <h2>{% trans "Welcome back" %}</h2>
-                        <p>{% trans "Enter your credentials to continue" %}</p>
+                <div class="s-card">
+                    <div class="s-card__hd">
+                        <h2>{% trans "Sign in to your account" %}</h2>
+                        <p>{% trans "Welcome back. Please enter your details." %}</p>
                     </div>
 
                     <form method="post" action="{% url 'login' %}">
                         {% csrf_token %}
 
-                        <div class="lf-group">
-                            <label class="lf-label" for="username">{% trans "Username" %}</label>
-                            <div class="lf-input-wrap">
-                                <input type="text" id="username" name="username" class="lf-input"
+                        <div class="s-field">
+                            <label class="s-field__label" for="username">{% trans "Username" %}</label>
+                            <div class="s-field__wrap">
+                                <input type="text" id="username" name="username" class="s-field__input"
                                     placeholder="{% trans 'Enter your username' %}"
                                     autocomplete="username" required />
-                                <ion-icon name="person-outline" class="lf-input-icon"></ion-icon>
+                                <div class="s-field__icon">
+                                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="lf-group">
-                            <label class="lf-label" for="password">{% trans "Password" %}</label>
-                            <div class="lf-input-wrap">
+                        <div class="s-field">
+                            <label class="s-field__label" for="password">{% trans "Password" %}</label>
+                            <div class="s-field__wrap">
                                 <input type="password" id="password" name="password"
-                                    class="lf-input lf-input--pw"
+                                    class="s-field__input s-field__input--pw"
                                     placeholder="{% trans 'Enter your password' %}"
                                     autocomplete="current-password" required />
-                                <ion-icon name="lock-closed-outline" class="lf-input-icon"></ion-icon>
-                                <button type="button" class="lf-pw-toggle" id="togglePwd" title="Toggle password">
+                                <div class="s-field__icon">
+                                    <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                </div>
+                                <button type="button" class="s-field__toggle" id="togglePwd" title="Show password">
                                     <ion-icon id="eyeIcon" name="eye-outline"></ion-icon>
                                 </button>
                             </div>
                         </div>
 
                         {% if not initialize_database %}
-                        <div class="lf-row">
-                            <a href="{% url 'forgot-password' %}" class="lf-forgot-link">{% trans "Forgot password?" %}</a>
+                        <div class="s-forgot">
+                            <a href="{% url 'forgot-password' %}">{% trans "Forgot password?" %}</a>
                         </div>
                         {% endif %}
 
-                        <button type="submit" class="lf-btn">
-                            {% trans "Sign In" %}
-                            <ion-icon name="arrow-forward-outline"></ion-icon>
+                        <button type="submit" class="s-submit">
+                            {% trans "Sign in" %}
+                            <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                         </button>
                     </form>
 
                     {% if initialize_database %}
-                    <div class="lf-divider"><span>{% trans "or" %}</span></div>
-                    <div class="lf-demo-row">
-                        <a href="{% url 'initialize-database' %}" class="lf-demo-btn lf-demo-btn--red">
-                            <ion-icon name="server-outline"></ion-icon>
-                            {% trans "Init Database" %}
+                    <div class="s-divider"><span>{% trans "OR" %}</span></div>
+                    <div class="s-demo">
+                        <a href="{% url 'initialize-database' %}" class="--red">
+                            <ion-icon name="server-outline"></ion-icon> {% trans "Init DB" %}
                         </a>
-                        <a href="#" onclick="$('#dataLoadAuthentication').toggleClass('oh-modal--show');" class="lf-demo-btn lf-demo-btn--green">
-                            <ion-icon name="cloud-download-outline"></ion-icon>
-                            {% trans "Load Demo" %}
+                        <a href="#" onclick="$('#dataLoadAuthentication').toggleClass('oh-modal--show');" class="--grn">
+                            <ion-icon name="cloud-download-outline"></ion-icon> {% trans "Load Demo" %}
                         </a>
                     </div>
                     {% endif %}
                 </div>
 
-                <div class="login-footer">
-                    {% trans "Secured with enterprise-grade encryption" %}
+                <div class="s-footer">
+                    &copy; {% now "Y" %} {% if white_label_company_name %}{{ white_label_company_name }}{% else %}Synergific Software{% endif %}. {% trans "All rights reserved." %}
                 </div>
             </div>
         </div>
 
     </div>
 
-    <!-- Demo data modal -->
     {% if initialize_database %}
-    <div class="oh-modal" id="dataLoadAuthentication" role="dialog" aria-hidden="true" style="backdrop-filter: blur(8px);">
-        <div class="oh-modal__dialog">
-            {% include "demo_database/auth_load_data.html" %}
-        </div>
+    <div class="oh-modal" id="dataLoadAuthentication" role="dialog" aria-hidden="true" style="backdrop-filter:blur(8px);">
+        <div class="oh-modal__dialog">{% include "demo_database/auth_load_data.html" %}</div>
     </div>
     {% endif %}
 
-    <!-- Scripts -->
     <script src="{% static '/build/js/web.frontend.min.js' %}"></script>
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <script type="module" src="{% static 'images/ionicons/ui_icons/ionicons/ionicons.esm.js' %}"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
     <script>
         document.getElementById('togglePwd').addEventListener('click', function () {
-            var pwd  = document.getElementById('password');
-            var icon = document.getElementById('eyeIcon');
-            if (pwd.type === 'password') {
-                pwd.type = 'text';
-                icon.setAttribute('name', 'eye-off-outline');
-            } else {
-                pwd.type = 'password';
-                icon.setAttribute('name', 'eye-outline');
-            }
+            var p = document.getElementById('password'),
+                i = document.getElementById('eyeIcon');
+            p.type = p.type === 'password' ? 'text' : 'password';
+            i.setAttribute('name', p.type === 'password' ? 'eye-outline' : 'eye-off-outline');
         });
         $(document).ready(function () {
             if ($('.oh-alert--warning').length > 0) {
-                Swal.fire({
-                    title: 'Access Denied!',
-                    text: 'Your login credentials are blocked. Please contact HR administrators.',
-                    icon: 'warning',
-                    confirmButtonText: 'OK',
-                    confirmButtonColor: '#3B82F6',
-                });
+                Swal.fire({ title: 'Access Denied', text: 'Your credentials are blocked. Contact HR.', icon: 'warning', confirmButtonText: 'OK', confirmButtonColor: '#2563EB' });
             }
         });
     </script>
