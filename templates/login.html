@@ -23,50 +23,6 @@
         }
         body.login-page, body.login-page #main { all: unset; display: block; }
 
-        /* ── Animated Background ─────────────────────────────────── */
-        .login-bg {
-            position: fixed; inset: 0;
-            background: #050d1a;
-            overflow: hidden;
-            z-index: 0;
-        }
-        .login-bg__grid {
-            position: absolute; inset: 0;
-            background-image:
-                linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px);
-            background-size: 60px 60px;
-        }
-        .login-bg__orb {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(80px);
-            animation: orbFloat 20s ease-in-out infinite;
-        }
-        .login-bg__orb--1 {
-            width: 500px; height: 500px;
-            background: radial-gradient(circle, rgba(59,130,246,0.15), transparent 70%);
-            top: -10%; left: -5%;
-            animation-delay: 0s;
-        }
-        .login-bg__orb--2 {
-            width: 400px; height: 400px;
-            background: radial-gradient(circle, rgba(16,185,129,0.1), transparent 70%);
-            bottom: -10%; right: -5%;
-            animation-delay: -7s;
-        }
-        .login-bg__orb--3 {
-            width: 300px; height: 300px;
-            background: radial-gradient(circle, rgba(139,92,246,0.1), transparent 70%);
-            top: 40%; left: 50%;
-            animation-delay: -14s;
-        }
-        @keyframes orbFloat {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(30px, -40px) scale(1.05); }
-            66% { transform: translate(-20px, 30px) scale(0.95); }
-        }
-
         /* ── Alerts ──────────────────────────────────────────────── */
         .login-alerts {
             position: fixed; top: 1.25rem; right: 1.25rem; z-index: 9999;
@@ -76,237 +32,259 @@
             padding: 12px 16px; border-radius: 12px;
             font-size: 0.85rem; font-weight: 500;
             animation: slideIn 0.3s ease;
-            backdrop-filter: blur(20px);
         }
         .login-alert-item.error, .login-alert-item.warning {
-            background: rgba(220,38,38,0.1); color: #FCA5A5;
-            border: 1px solid rgba(220,38,38,0.2);
+            background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA;
         }
         .login-alert-item.success {
-            background: rgba(16,185,129,0.1); color: #6EE7B7;
-            border: 1px solid rgba(16,185,129,0.2);
+            background: #ECFDF5; color: #059669; border: 1px solid #A7F3D0;
         }
         @keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
 
-        /* ── Main Layout ─────────────────────────────────────────── */
+        /* ── Layout ──────────────────────────────────────────────── */
         .login-wrap {
-            position: relative; z-index: 1;
             display: flex !important;
             min-height: 100vh !important;
             width: 100% !important;
         }
 
-        /* ── Left Panel ──────────────────────────────────────────── */
+        /* ── Left Panel — Branding (dark) ────────────────────────── */
         .login-left {
-            flex: 0 0 50%;
+            flex: 0 0 45%;
+            background: #0B1526;
+            background-image:
+                radial-gradient(ellipse 80% 50% at 20% 80%, rgba(59,130,246,0.08), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 20%, rgba(124,58,237,0.06), transparent);
             display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            padding: 4rem;
+            justify-content: space-between;
+            padding: 3rem 3.5rem;
             position: relative;
+            overflow: hidden;
         }
-        .login-left__inner {
-            max-width: 480px; width: 100%;
+        /* Subtle grid */
+        .login-left::before {
+            content: '';
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
         }
-        .login-left__logo {
-            margin-bottom: 3rem;
+
+        .login-left__top, .login-left__mid, .login-left__bottom { position: relative; z-index: 1; }
+
+        .login-left__top {
+            display: flex; align-items: center; gap: 10px;
         }
-        .login-left__logo img {
-            height: 42px; object-fit: contain;
-            filter: brightness(0) invert(1);
+        .login-left__badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 14px; border-radius: 20px;
+            background: rgba(59,130,246,0.1);
+            border: 1px solid rgba(59,130,246,0.15);
+            font-size: 0.72rem; font-weight: 600;
+            color: #60A5FA; text-transform: uppercase;
+            letter-spacing: 0.06em;
         }
+        .login-left__badge-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+            animation: pulse 2s ease infinite;
+        }
+        @keyframes pulse { 0%,100%{ box-shadow: 0 0 0 3px rgba(59,130,246,0.2); } 50%{ box-shadow: 0 0 0 6px rgba(59,130,246,0.08); } }
+
+        .login-left__mid { flex: 1; display: flex; flex-direction: column; justify-content: center; }
         .login-left__headline {
-            font-size: 3rem;
-            font-weight: 900;
-            color: #FFFFFF;
-            line-height: 1.1;
-            letter-spacing: -0.04em;
+            font-size: 2.75rem; font-weight: 900; color: #FFFFFF;
+            line-height: 1.1; letter-spacing: -0.04em;
             margin-bottom: 1.25rem;
         }
-        .login-left__headline span {
-            background: linear-gradient(135deg, #38BDF8, #818CF8, #C084FC);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .login-left__headline em {
+            font-style: normal;
+            background: linear-gradient(135deg, #60A5FA, #A78BFA);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             background-clip: text;
         }
         .login-left__desc {
-            font-size: 1.05rem;
-            color: #94A3B8;
-            line-height: 1.7;
-            margin-bottom: 3rem;
-            max-width: 420px;
+            font-size: 1rem; color: #94A3B8; line-height: 1.75;
+            max-width: 400px;
         }
 
-        /* Stats row */
-        .login-stats {
-            display: flex; gap: 2.5rem;
-            padding-top: 2rem;
-            border-top: 1px solid rgba(255,255,255,0.06);
+        /* Feature pills */
+        .login-pills {
+            display: flex; flex-wrap: wrap; gap: 8px;
+            margin-top: 2.5rem;
         }
-        .login-stat__number {
-            font-size: 2rem; font-weight: 800; color: #FFFFFF;
-            letter-spacing: -0.03em;
+        .login-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border-radius: 10px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            font-size: 0.8rem; color: #CBD5E1; font-weight: 500;
         }
-        .login-stat__number span {
-            background: linear-gradient(135deg, #38BDF8, #818CF8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .login-stat__label {
-            font-size: 0.78rem; color: #64748B;
-            margin-top: 2px; font-weight: 500;
-            text-transform: uppercase; letter-spacing: 0.05em;
+        .login-pill ion-icon { font-size: 1rem; color: #60A5FA; }
+
+        .login-left__bottom {
+            font-size: 0.75rem; color: #334155;
         }
 
-        /* ── Right Panel ─────────────────────────────────────────── */
+        /* ── Right Panel — Form (light) ──────────────────────────── */
         .login-right {
             flex: 1;
+            background: #FFFFFF;
             display: flex; flex-direction: column;
             align-items: center; justify-content: center;
             padding: 3rem 2.5rem;
+            position: relative;
         }
+        /* Decorative corner shapes */
+        .login-right::before {
+            content: '';
+            position: absolute; top: -60px; right: -60px;
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(59,130,246,0.05), transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .login-right::after {
+            content: '';
+            position: absolute; bottom: -40px; left: -40px;
+            width: 150px; height: 150px;
+            background: radial-gradient(circle, rgba(124,58,237,0.04), transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
         .login-form-container {
-            width: 100%; max-width: 420px;
+            width: 100%; max-width: 400px;
+            position: relative; z-index: 1;
         }
 
-        /* Glass card */
-        .login-glass {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 24px;
-            padding: 2.5rem;
-            backdrop-filter: blur(40px);
-            box-shadow: 0 32px 64px rgba(0,0,0,0.3);
+        /* Logo */
+        .login-form-logo {
+            text-align: center; margin-bottom: 2.5rem;
+        }
+        .login-form-logo img {
+            height: 48px; object-fit: contain;
         }
 
-        .login-form-head { text-align: center; margin-bottom: 2rem; }
-        .login-form-head__icon {
-            width: 56px; height: 56px;
-            background: linear-gradient(135deg, #3B82F6, #8B5CF6);
-            border-radius: 16px;
-            display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 1.25rem;
-            box-shadow: 0 8px 24px rgba(59,130,246,0.3);
+        /* Form card */
+        .login-card {
+            background: #FFFFFF;
+            border: 1px solid #E5E7EB;
+            border-radius: 20px;
+            padding: 2.25rem;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
         }
-        .login-form-head__icon ion-icon { font-size: 1.5rem; color: #FFF; }
-        .login-form-head h2 {
-            font-size: 1.5rem; font-weight: 800; color: #F1F5F9;
-            letter-spacing: -0.03em; margin-bottom: 6px;
+
+        .login-card__head { text-align: center; margin-bottom: 2rem; }
+        .login-card__head h2 {
+            font-size: 1.5rem; font-weight: 800; color: #111827;
+            letter-spacing: -0.03em; margin-bottom: 4px;
         }
-        .login-form-head p {
-            font-size: 0.875rem; color: #64748B;
+        .login-card__head p {
+            font-size: 0.875rem; color: #6B7280;
         }
 
         /* Input groups */
         .lf-group { margin-bottom: 1.25rem; }
         .lf-label {
-            display: block; font-size: 0.75rem; font-weight: 600;
-            color: #94A3B8; margin-bottom: 8px;
-            text-transform: uppercase; letter-spacing: 0.08em;
+            display: block; font-size: 0.75rem; font-weight: 700;
+            color: #374151; margin-bottom: 6px;
+            text-transform: uppercase; letter-spacing: 0.06em;
         }
         .lf-input-wrap { position: relative; }
         .lf-input-icon {
             position: absolute; left: 14px; top: 50%;
             transform: translateY(-50%);
-            color: #475569; font-size: 1.1rem;
+            color: #9CA3AF; font-size: 1.1rem;
             display: flex; align-items: center;
             pointer-events: none;
             transition: color 0.2s;
         }
         .lf-input {
             width: 100%;
-            padding: 13px 14px 13px 44px;
-            border: 1.5px solid rgba(255,255,255,0.08);
+            padding: 12px 14px 12px 44px;
+            border: 1.5px solid #E5E7EB;
             border-radius: 12px;
-            font-size: 0.9rem;
-            color: #F1F5F9;
-            background: rgba(255,255,255,0.03);
-            transition: all 0.25s ease;
-            font-family: inherit;
-            outline: none;
+            font-size: 0.9rem; color: #111827;
+            background: #F9FAFB;
+            transition: all 0.2s ease;
+            font-family: inherit; outline: none;
         }
         .lf-input:focus {
             border-color: #3B82F6;
-            background: rgba(59,130,246,0.05);
+            background: #FFFFFF;
             box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
         }
         .lf-input:focus ~ .lf-input-icon { color: #3B82F6; }
-        .lf-input::placeholder { color: #475569; }
+        .lf-input::placeholder { color: #9CA3AF; }
         .lf-input--pw { padding-right: 48px; }
 
         .lf-pw-toggle {
             position: absolute; right: 12px; top: 50%;
             transform: translateY(-50%);
             background: none; border: none; cursor: pointer;
-            color: #475569; padding: 4px;
+            color: #9CA3AF; padding: 4px;
             display: flex; align-items: center; justify-content: center;
             transition: color 0.2s; line-height: 1;
         }
         .lf-pw-toggle:hover { color: #3B82F6; }
         .lf-pw-toggle ion-icon { font-size: 1.1rem; }
 
-        /* Remember me row */
+        /* Forgot link */
         .lf-row {
-            display: flex; justify-content: space-between;
-            align-items: center; margin-bottom: 1.5rem;
+            display: flex; justify-content: flex-end;
+            margin-bottom: 1.5rem;
         }
         .lf-forgot-link {
             font-size: 0.82rem; color: #3B82F6;
             text-decoration: none; font-weight: 600;
             transition: color 0.2s;
         }
-        .lf-forgot-link:hover { color: #60A5FA; text-decoration: underline; }
+        .lf-forgot-link:hover { color: #1D4ED8; text-decoration: underline; }
 
         /* Sign in button */
         .lf-btn {
-            width: 100%; padding: 14px;
-            background: linear-gradient(135deg, #3B82F6, #7C3AED);
-            color: #FFF; border: none;
+            width: 100%; padding: 13px;
+            background: #0B1526;
+            color: #FFFFFF; border: none;
             border-radius: 12px;
-            font-size: 0.95rem; font-weight: 700;
+            font-size: 0.92rem; font-weight: 700;
             cursor: pointer;
-            transition: all 0.25s ease;
+            transition: all 0.2s ease;
             display: flex; align-items: center;
             justify-content: center; gap: 8px;
             letter-spacing: 0.01em;
-            box-shadow: 0 8px 24px rgba(59,130,246,0.25);
             font-family: inherit;
-            position: relative;
-            overflow: hidden;
         }
-        .lf-btn::before {
-            content: '';
-            position: absolute; inset: 0;
-            background: linear-gradient(135deg, #60A5FA, #A78BFA);
-            opacity: 0; transition: opacity 0.25s;
-        }
-        .lf-btn:hover::before { opacity: 1; }
         .lf-btn:hover {
-            box-shadow: 0 12px 32px rgba(59,130,246,0.4);
-            transform: translateY(-2px);
+            background: #1E293B;
+            box-shadow: 0 8px 24px rgba(11,21,38,0.2);
+            transform: translateY(-1px);
         }
         .lf-btn:active { transform: translateY(0); }
-        .lf-btn ion-icon, .lf-btn span { position: relative; z-index: 1; }
-        .lf-btn ion-icon { font-size: 1.1rem; }
+        .lf-btn ion-icon { font-size: 1rem; }
 
         /* Divider */
         .lf-divider {
             display: flex; align-items: center;
-            margin: 1.5rem 0; gap: 12px;
+            margin: 1.25rem 0; gap: 12px;
         }
         .lf-divider::before, .lf-divider::after {
             content: ''; flex: 1; height: 1px;
-            background: rgba(255,255,255,0.06);
+            background: #E5E7EB;
         }
         .lf-divider span {
-            font-size: 0.75rem; color: #475569;
-            text-transform: uppercase; letter-spacing: 0.08em;
+            font-size: 0.75rem; color: #9CA3AF;
+            text-transform: uppercase; letter-spacing: 0.06em;
         }
 
         /* Demo buttons */
         .lf-demo-row { display: flex; gap: 10px; }
         .lf-demo-btn {
-            flex: 1; padding: 11px 8px;
+            flex: 1; padding: 10px 8px;
             border-radius: 10px;
             font-size: 0.8rem; font-weight: 600;
             cursor: pointer; border: none;
@@ -316,43 +294,38 @@
             font-family: inherit; text-decoration: none;
         }
         .lf-demo-btn--red {
-            background: rgba(239,68,68,0.08); color: #FCA5A5;
-            border: 1px solid rgba(239,68,68,0.15);
+            background: #FEF2F2; color: #DC2626;
+            border: 1px solid #FECACA;
         }
-        .lf-demo-btn--red:hover { background: rgba(239,68,68,0.15); }
+        .lf-demo-btn--red:hover { background: #FEE2E2; }
         .lf-demo-btn--green {
-            background: rgba(16,185,129,0.08); color: #6EE7B7;
-            border: 1px solid rgba(16,185,129,0.15);
+            background: #ECFDF5; color: #059669;
+            border: 1px solid #A7F3D0;
         }
-        .lf-demo-btn--green:hover { background: rgba(16,185,129,0.15); }
+        .lf-demo-btn--green:hover { background: #D1FAE5; }
 
         /* Footer */
         .login-footer {
             text-align: center; margin-top: 2rem;
-            font-size: 0.75rem; color: #334155;
+            font-size: 0.75rem; color: #9CA3AF;
         }
 
         /* ── Responsive ──────────────────────────────────────────── */
         @media (max-width: 900px) {
             .login-left { display: none !important; }
-            .login-right { padding: 2rem 1.5rem; }
+            .login-right {
+                background: #F3F4F6 !important;
+                padding: 2rem 1.5rem;
+            }
         }
         @media (max-width: 480px) {
-            .login-glass { padding: 2rem 1.5rem; border-radius: 20px; }
-            .login-form-head h2 { font-size: 1.3rem; }
+            .login-card { padding: 1.75rem 1.5rem; border-radius: 16px; }
+            .login-card__head h2 { font-size: 1.3rem; }
         }
     </style>
 </head>
 
 <body class="login-page">
-    <!-- Animated Background -->
-    <div class="login-bg">
-        <div class="login-bg__grid"></div>
-        <div class="login-bg__orb login-bg__orb--1"></div>
-        <div class="login-bg__orb login-bg__orb--2"></div>
-        <div class="login-bg__orb login-bg__orb--3"></div>
-    </div>
-
     <!-- Alerts -->
     <div class="login-alerts">
         {% for message in messages %}
@@ -362,10 +335,62 @@
 
     <div class="login-wrap">
 
-        <!-- ═══ LEFT PANEL ═══════════════════════════════════════════ -->
+        <!-- ═══ LEFT PANEL — Dark branding ═══════════════════════════ -->
         <div class="login-left">
-            <div class="login-left__inner">
-                <div class="login-left__logo">
+            <div class="login-left__top">
+                <div class="login-left__badge">
+                    <div class="login-left__badge-dot"></div>
+                    HR Platform
+                </div>
+            </div>
+
+            <div class="login-left__mid">
+                <h1 class="login-left__headline">
+                    Simplify your<br>HR with <em>one&nbsp;platform.</em>
+                </h1>
+                <p class="login-left__desc">
+                    From recruitment to retirement — manage payroll, attendance, leave, performance and assets in a single unified workspace.
+                </p>
+
+                <div class="login-pills">
+                    <div class="login-pill">
+                        <ion-icon name="people-outline"></ion-icon> Employees
+                    </div>
+                    <div class="login-pill">
+                        <ion-icon name="card-outline"></ion-icon> Payroll
+                    </div>
+                    <div class="login-pill">
+                        <ion-icon name="time-outline"></ion-icon> Attendance
+                    </div>
+                    <div class="login-pill">
+                        <ion-icon name="calendar-outline"></ion-icon> Leave
+                    </div>
+                    <div class="login-pill">
+                        <ion-icon name="trending-up-outline"></ion-icon> Performance
+                    </div>
+                    <div class="login-pill">
+                        <ion-icon name="briefcase-outline"></ion-icon> Recruitment
+                    </div>
+                    <div class="login-pill">
+                        <ion-icon name="laptop-outline"></ion-icon> Assets
+                    </div>
+                    <div class="login-pill">
+                        <ion-icon name="cash-outline"></ion-icon> Disbursement
+                    </div>
+                </div>
+            </div>
+
+            <div class="login-left__bottom">
+                &copy; {% now "Y" %} {% if white_label_company_name %}{{ white_label_company_name }}{% else %}Synergific Software{% endif %}
+            </div>
+        </div>
+
+        <!-- ═══ RIGHT PANEL — Clean form ═════════════════════════════ -->
+        <div class="login-right">
+            <div class="login-form-container">
+
+                <!-- Logo in original colors -->
+                <div class="login-form-logo">
                     {% if white_label_company.icon %}
                     <img src="{{ white_label_company.icon.url }}" alt="{{ white_label_company_name }}" />
                     {% else %}
@@ -373,41 +398,11 @@
                     {% endif %}
                 </div>
 
-                <h1 class="login-left__headline">
-                    Your people,<br><span>powered up.</span>
-                </h1>
-                <p class="login-left__desc">
-                    One platform for payroll, attendance, recruitment, performance, and everything HR. Built for teams that move fast.
-                </p>
-
-                <div class="login-stats">
-                    <div>
-                        <div class="login-stat__number"><span>12+</span></div>
-                        <div class="login-stat__label">HR Modules</div>
-                    </div>
-                    <div>
-                        <div class="login-stat__number"><span>100%</span></div>
-                        <div class="login-stat__label">Automated</div>
-                    </div>
-                    <div>
-                        <div class="login-stat__number"><span>24/7</span></div>
-                        <div class="login-stat__label">Self-Service</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ═══ RIGHT PANEL ══════════════════════════════════════════ -->
-        <div class="login-right">
-            <div class="login-form-container">
-
-                <div class="login-glass">
-                    <div class="login-form-head">
-                        <div class="login-form-head__icon">
-                            <ion-icon name="finger-print-outline"></ion-icon>
-                        </div>
+                <!-- Form Card -->
+                <div class="login-card">
+                    <div class="login-card__head">
                         <h2>{% trans "Welcome back" %}</h2>
-                        <p>{% trans "Sign in to your HR workspace" %}</p>
+                        <p>{% trans "Enter your credentials to continue" %}</p>
                     </div>
 
                     <form method="post" action="{% url 'login' %}">
@@ -439,14 +434,13 @@
 
                         {% if not initialize_database %}
                         <div class="lf-row">
-                            <span></span>
                             <a href="{% url 'forgot-password' %}" class="lf-forgot-link">{% trans "Forgot password?" %}</a>
                         </div>
                         {% endif %}
 
                         <button type="submit" class="lf-btn">
+                            {% trans "Sign In" %}
                             <ion-icon name="arrow-forward-outline"></ion-icon>
-                            <span>{% trans "Sign In" %}</span>
                         </button>
                     </form>
 
@@ -466,7 +460,7 @@
                 </div>
 
                 <div class="login-footer">
-                    &copy; {% now "Y" %} {% if white_label_company_name %}{{ white_label_company_name }}{% else %}Synergific Software{% endif %}. All rights reserved.
+                    {% trans "Secured with enterprise-grade encryption" %}
                 </div>
             </div>
         </div>
@@ -499,7 +493,6 @@
                 icon.setAttribute('name', 'eye-outline');
             }
         });
-
         $(document).ready(function () {
             if ($('.oh-alert--warning').length > 0) {
                 Swal.fire({
